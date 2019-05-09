@@ -37,6 +37,8 @@ namespace WindowsFormsApp1
             panel1.Controls.Add(bw);
             bw.Dock = DockStyle.Fill;
 
+            bw.RequestHandler = new MyRequestHandler();
+
             bw.FrameLoadStart += Browser_FrameLoadStart;
             bw.FrameLoadEnd += Web_FrameLoadEnd;
             bw.StatusMessage += Bw_StatusMessage;
