@@ -1,18 +1,24 @@
 ﻿using System;
-using System.ComponentModel;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Windows.Forms;
 using CefSharp;
 using CefSharp.WinForms;
+using NewLife.Collections;
+using NewLife.IO;
 using NewLife.Log;
+using NewLife.Threading;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace WindowsFormsApp1
 {
     [ComVisible(true)]
     public partial class Form1 : Form
     {
-        public Uri Home { get; set; }
-
         private ChromiumWebBrowser Browser { get; set; }
 
         public Form1()
@@ -37,7 +43,12 @@ namespace WindowsFormsApp1
             panel1.Controls.Add(bw);
             bw.Dock = DockStyle.Fill;
 
-            bw.RequestHandler = new MyRequestHandler();
+            var req = new MyRequestHandler
+            {
+                OnComplete = OnComplete
+            };
+
+            bw.RequestHandler = req;
 
             bw.FrameLoadStart += Browser_FrameLoadStart;
             bw.FrameLoadEnd += Web_FrameLoadEnd;
@@ -61,19 +72,8 @@ namespace WindowsFormsApp1
 
         private void Form1_Load(Object sender, EventArgs e)
         {
-            //var url = "http://www.chinacar.com.cn/Home/GonggaoSearch/GonggaoSearch/search_json?_dc=" + DateTime.Now.Ticks;
-
-            //var dic = new Dictionary<String, String>();
-            //dic["s7"] = "YCS04200-68";
-
-            //var client = new HttpClient();
-            //var rs = client.PostAsync(url, new FormUrlEncodedContent(dic)).Result;
-            //var html = rs.Content.ReadAsStringAsync().Result;
-
-            var url = "http://www.chinacar.com.cn/search.html";
-            Home = new Uri(url);
-
-            //Browser.Load(url);
+            var result = File.ReadAllText("result.json");
+            DecodeResult(result);
         }
 
         private void Browser_FrameLoadStart(Object sender, FrameLoadStartEventArgs e)
@@ -90,75 +90,105 @@ namespace WindowsFormsApp1
         {
             XTrace.WriteLine("FrameLoadEnd {0}", e.Url);
 
-            //一个网页会调用多次,需要手动自己处理逻辑
-            var url = e.Url;
-            var result = await Browser.GetSourceAsync();
-            var html = result;
-
-            ////调用js
-            //browser.GetBrowser().MainFrame.ExecuteJavaScriptAsync("alert('这是c#调用的js,给文本框赋值！')");
-            ////txtAccount
-            //browser.GetBrowser().MainFrame.ExecuteJavaScriptAsync("document.getElementById('kw').value='在C#里面给页面文本框进行赋值'");
+            //var url = e.Url;
+            //var result = await Browser.GetSourceAsync();
+            //var html = result;
         }
 
-        private void WebBrowser1_DocumentCompleted(Object sender, WebBrowserDocumentCompletedEventArgs e)
+        private void OnComplete(IRequest request, IResponse response, String result)
         {
-            if (e.Url.Host != Home.Host) return;
-
-            Text = e.Url + "";
-
-            XTrace.WriteLine(e.Url + "");
+            // 解码Json
+            ThreadPoolX.QueueUserWorkItem(DecodeResult, result);
         }
 
-        private void WebBrowser1_NewWindow(Object sender, CancelEventArgs e)
+        private void DecodeResult(String result)
         {
-            //var wb = (WebBrowser)sender;
-            //var newUrl = wb.Document.ActiveElement.GetAttribute("href");
-            //if (newUrl.IsNullOrEmpty()) return;
+            var js = JsonConvert.DeserializeObject(result);
 
-            //wb.Url = new Uri(newUrl);
-
-            //e.Cancel = true;
+            //var js = new JsonParser(result).Decode();
+            Decode(js);
         }
 
-        private void WebBrowser1_Navigating(Object sender, WebBrowserNavigatingEventArgs e)
+        private void Decode(Object js)
         {
-            //XTrace.WriteLine("Navigating {0}", e.Url);
-        }
+            //if (js is IList<Object> list)
+            //{
+            //    if (list.Count > 0) WriteData(list);
 
-        //private void Wb_BeforeScriptExecute(Object pDispWindow)
-        //{
-        //    var text = webBrowser1.DocumentText;
-        //    var vDocument = (IHTMLDocument2)webBrowser1.Document.DomDocument;
+            //    return;
+            //}
 
-        //    //var script = "alert('hello');";
-        //    //vDocument.parentWindow.execScript(script, "javascript");
-        //}
+            //if (js is IDictionary<String, Object> dic)
+            //{
+            //    foreach (var item in dic)
+            //    {
+            //        Decode(item.Value);
+            //    }
+            //}
 
-        private void WebBrowser_BeforeNavigate2(Object pDisp, ref Object URL, ref Object Flags, ref Object TargetFrameName, ref Object postData, ref Object Headers, ref Boolean Cancel)
-        {
-            var uri = new Uri(URL + "");
-            if (uri.Host.EndsWithIgnoreCase("baidu.com"))
+            if (js is IDictionary<String, JToken> jts && jts.Count > 0)
             {
-                Cancel = true;
+                foreach (var item in jts)
+                {
+                    Decode(item.Value);
+                }
+
                 return;
             }
 
-            XTrace.WriteLine("Navigate [{0}] {1}", TargetFrameName, URL);
-
-            if (postData != null)
+            if (js is IList<JToken> tokens)
             {
-                var postDataText = System.Text.Encoding.ASCII.GetString(postData as Byte[]);
-                XTrace.WriteLine("POST {0}", postDataText);
+                if (tokens.Count > 0) WriteData(tokens);
+
+                return;
             }
         }
 
-        //private void Wb_NewWindow3(ref Object ppDisp, ref Boolean Cancel, UInt32 dwFlags, String bstrUrlContext, String bstrUrl)
-        //{
-        //    XTrace.WriteLine("NewWindow3 [{0}] {1}", bstrUrlContext, bstrUrl);
+        private static Int32 _gid;
+        private void WriteData(IList<JToken> list)
+        {
+            //var sb = Pool.StringBuilder.Get();
+            //var lines = new List<String>();
 
-        //    Cancel = true;
-        //    webBrowser1.Navigate(bstrUrl);
-        //}
+            // 头部
+            var headers = new List<String>();
+            foreach (var item in list)
+            {
+                if (item is IDictionary<String, JToken> dic)
+                {
+                    foreach (var elm in dic)
+                    {
+                        if (!headers.Contains(elm.Key)) headers.Add(elm.Key);
+                    }
+                }
+            }
+
+            var fname = $"{DateTime.Now:yyyyMMddHHmmss}_{++_gid}.csv";
+            using (var csv = new CsvFile(fname, true))
+            {
+                //csv.Encoding = new UTF8Encoding(true);
+
+                // 第一行写头部
+                //if (lines.Count == 0) lines.Add(headers.Join(","));
+                csv.WriteLine(headers);
+
+                // 单行和多行
+                foreach (var item in list)
+                {
+                    if (item is IDictionary<String, JToken> dic)
+                    {
+                        csv.WriteLine(headers.Select(e => dic[e]));
+                    }
+                    else
+                    {
+                        //lines.Add(item + "");
+                        csv.WriteLine(new[] { item });
+                    }
+                }
+            }
+
+            //var fname = $"{DateTime.Now:yyyyMMddHHmmss}_{++_gid}.csv";
+            //File.WriteAllLines(fname, lines, new UTF8Encoding(true));
+        }
     }
 }

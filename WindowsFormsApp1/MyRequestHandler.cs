@@ -1,13 +1,17 @@
 ﻿using System;
-using System.IO;
 using CefSharp;
 using CefSharp.Handler;
+using NewLife.Collections;
 using NewLife.Log;
 
 namespace WindowsFormsApp1
 {
     internal class MyRequestHandler : DefaultRequestHandler
     {
+        public Action<IRequest, IResponse, String> OnComplete;
+
+        private readonly DictionaryCache<UInt64, IResponseFilter> _filters = new DictionaryCache<UInt64, IResponseFilter> { Expire = 60, Period = 60 };
+
         public override CefReturnValue OnBeforeResourceLoad(IWebBrowser browserControl, IBrowser browser, IFrame frame, IRequest request, IRequestCallback callback)
         {
 
@@ -101,6 +105,13 @@ namespace WindowsFormsApp1
 
         public override IResponseFilter GetResourceResponseFilter(IWebBrowser browserControl, IBrowser browser, IFrame frame, IRequest request, IResponse response)
         {
+            if (request.ResourceType == ResourceType.Xhr)
+            {
+                var filter = new MyResponseFilter();
+                _filters.Set(request.Identifier, filter);
+                return filter;
+            }
+
             return null;
         }
 
@@ -109,7 +120,20 @@ namespace WindowsFormsApp1
             if (status == UrlRequestStatus.Success && request.ResourceType == ResourceType.Xhr && receivedContentLength > 0)
             {
                 XTrace.WriteLine("LoadComplete [{0}] {1}", receivedContentLength, request.Url);
-                //var html = response.
+                //var html = frame.GetTextAsync().Result;
+                //frame.GetTextAsync().ContinueWith(t =>
+                //{
+                //    var html = t.Result;
+                //});
+                var filter = _filters[request.Identifier];
+                if (filter is MyResponseFilter rf)
+                {
+                    var ms = rf.Stream;
+                    ms.Position = 0;
+
+                    var html = ms.ToStr();
+                    if (!html.IsNullOrEmpty()) OnComplete?.Invoke(request, response, html);
+                }
             }
         }
     }
