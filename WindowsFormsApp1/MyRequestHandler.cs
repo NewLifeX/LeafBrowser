@@ -1,120 +1,113 @@
 ﻿using System;
-using System.Security.Cryptography.X509Certificates;
+using System.IO;
 using CefSharp;
+using CefSharp.Handler;
+using NewLife.Log;
 
 namespace WindowsFormsApp1
 {
-    internal class MyRequestHandler : IRequestHandler
+    internal class MyRequestHandler : DefaultRequestHandler
     {
-        public event Action<String> msg;
-        public event Action<String, Object> msg2;
-        public Boolean GetAuthCredentials(IWebBrowser browserControl, IBrowser browser, IFrame frame, Boolean isProxy,
-            String host, Int32 port, String realm, String scheme, IAuthCallback callback) => false;
-
-        public IResponseFilter GetResourceResponseFilter(IWebBrowser browserControl, IBrowser browser, IFrame frame, IRequest request, IResponse response)
+        public override CefReturnValue OnBeforeResourceLoad(IWebBrowser browserControl, IBrowser browser, IFrame frame, IRequest request, IRequestCallback callback)
         {
 
-            //if (!response.ResponseHeaders["Content-Type"].Contains("application/json"))
+            if (!Uri.TryCreate(request.Url, UriKind.Absolute, out var uri))
+            {
+                //If we're unable to parse the Uri then cancel the request
+                // avoid throwing any exceptions here as we're being called by unmanaged code
+                return CefReturnValue.Cancel;
+            }
+
+            // 过滤广告
+            if (uri.Host.EndsWithIgnoreCase("pos.baidu.com", "crs.baidu.com", "hm.baidu.com", "em.baidu.com", "eclick.baidu.com", "baidustatic.com", "b.qq.com")) return CefReturnValue.Cancel;
+            if (uri.PathAndQuery.StartsWithIgnoreCase("/Ad/")) return CefReturnValue.Cancel;
+
+            //System.Diagnostics.Debug.WriteLine(request.ResourceType.ToString());
+            //System.Diagnostics.Debug.WriteLine(url);
+
+            XTrace.WriteLine("Load [{0}] {1}", request.ResourceType, uri);
+
+            //Uri url;
+            //if (Uri.TryCreate(request.Url, UriKind.Absolute, out url) == false)
             //{
-            return null;
+            //    //If we're unable to parse the Uri then cancel the request
+            //    // avoid throwing any exceptions here as we're being called by unmanaged code
+            //    return CefReturnValue.Cancel;
             //}
 
-            //var filter = FilterManager.CreateFilter(request.Identifier.ToString());
+            ////Example of how to set Referer
+            //// Same should work when setting any header
 
-            //return filter;
-        }
+            //// For this example only set Referer when using our custom scheme
+            //if (url.Scheme == CefSharpSchemeHandlerFactory.SchemeName)
+            //{
+            //    //Referrer is now set using it's own method (was previously set in headers before)
+            //    request.SetReferrer("http://google.com", ReferrerPolicy.Default);
+            //}
 
-        private void Filter_VOIDFUN(String arg1, String arg2, String arg3, Int64 arg4) => msg2?.Invoke(arg1, arg2);
+            ////Example of setting User-Agent in every request.
+            ////var headers = request.Headers;
 
-        public Boolean OnBeforeBrowse(IWebBrowser browserControl, IBrowser browser, IFrame frame, IRequest request,
-            Boolean isRedirect)
-        {
-            var m = request.Method;
-            msg?.Invoke(request.Url);
-            msg?.Invoke(m);
-            if (request.Method == "POST")
-            {
-                using (var postData = request.PostData)
-                {
-                    if (postData != null)
-                    {
-                        var elements = postData.Elements;
+            ////var userAgent = headers["User-Agent"];
+            ////headers["User-Agent"] = userAgent + " CefSharp";
 
-                        var charSet = request.GetCharSet();
+            ////request.Headers = headers;
 
-                        foreach (var element in elements)
-                        {
-                            if (element.Type == PostDataElementType.Bytes)
-                            {
-                                var body = element.GetBody(charSet);
-                                msg?.Invoke(body);
-                            }
-                        }
-                    }
-                }
-            }
+            ////NOTE: If you do not wish to implement this method returning false is the default behaviour
+            //// We also suggest you explicitly Dispose of the callback as it wraps an unmanaged resource.
+            ////callback.Dispose();
+            ////return false;
 
-            return false;
-        }
+            ////NOTE: When executing the callback in an async fashion need to check to see if it's disposed
+            //if (!callback.IsDisposed)
+            //{
+            //    using (callback)
+            //    {
+            //        if (request.Method == "POST")
+            //        {
+            //            using (var postData = request.PostData)
+            //            {
+            //                if (postData != null)
+            //                {
+            //                    var elements = postData.Elements;
 
-        public CefReturnValue OnBeforeResourceLoad(IWebBrowser browserControl, IBrowser browser, IFrame frame, IRequest request, IRequestCallback callback)
-        {
-            var m = request.Method;
-            msg?.Invoke(request.Url);
-            msg?.Invoke(m);
-            if (request.Method == "POST")
-            {
-                using (var postData = request.PostData)
-                {
-                    if (postData != null)
-                    {
-                        var elements = postData.Elements;
+            //                    var charSet = request.GetCharSet();
 
-                        var charSet = request.GetCharSet();
+            //                    foreach (var element in elements)
+            //                    {
+            //                        if (element.Type == PostDataElementType.Bytes)
+            //                        {
+            //                            var body = element.GetBody(charSet);
+            //                        }
+            //                    }
+            //                }
+            //            }
+            //        }
 
-                        foreach (var element in elements)
-                        {
-                            if (element.Type == PostDataElementType.Bytes)
-                            {
-                                var body = element.GetBody(charSet);
-                                msg?.Invoke(body);
-                            }
-                        }
-                    }
-                }
-            }
+            //        //Note to Redirect simply set the request Url
+            //        //if (request.Url.StartsWith("https://www.google.com", StringComparison.OrdinalIgnoreCase))
+            //        //{
+            //        //    request.Url = "https://github.com/";
+            //        //}
+
+            //        //Callback in async fashion
+            //        //callback.Continue(true);
+            //        //return CefReturnValue.ContinueAsync;
+            //    }
+            //}
 
             return CefReturnValue.Continue;
         }
 
-        public Boolean OnCertificateError(IWebBrowser browserControl, IBrowser browser, CefErrorCode errorCode, String requestUrl, ISslInfo sslInfo, IRequestCallback callback) => true;
+        public override IResponseFilter GetResourceResponseFilter(IWebBrowser browserControl, IBrowser browser, IFrame frame, IRequest request, IResponse response)
+        {
+            return null;
+        }
 
-        public Boolean OnOpenUrlFromTab(IWebBrowser browserControl, IBrowser browser, IFrame frame, String targetUrl, WindowOpenDisposition targetDisposition, Boolean userGesture) => false;
+        private readonly Random _rand = new Random();
 
-        public void OnPluginCrashed(IWebBrowser browserControl, IBrowser browser, String pluginPath) { }
-
-        public Boolean OnProtocolExecution(IWebBrowser browserControl, IBrowser browser, String url) => false;
-
-        public Boolean OnQuotaRequest(IWebBrowser browserControl, IBrowser browser, String originUrl, Int64 newSize, IRequestCallback callback) => false;
-
-        public void OnRenderProcessTerminated(IWebBrowser browserControl, IBrowser browser, CefTerminationStatus status) { }
-
-        public void OnRenderViewReady(IWebBrowser browserControl, IBrowser browser) { }
-
-        public void OnResourceLoadComplete(IWebBrowser browserControl, IBrowser browser, IFrame frame, IRequest request, IResponse response, UrlRequestStatus status, Int64 receivedContentLength) { }
-
-        public void OnResourceRedirect(IWebBrowser browserControl, IBrowser browser, IFrame frame, IRequest request, ref String newUrl) { }
-
-        public void OnResourceRedirect(IWebBrowser browserControl, IBrowser browser, IFrame frame, IRequest request, IResponse response, ref String newUrl) { }
-
-        public Boolean OnResourceResponse(IWebBrowser browserControl, IBrowser browser, IFrame frame, IRequest request, IResponse response) => false;
-
-        public Boolean OnSelectClientCertificate(IWebBrowser browserControl, IBrowser browser, Boolean isProxy, String host, Int32 port, X509Certificate2Collection certificates, ISelectClientCertificateCallback callback) => true;
-
-        public Boolean OnBeforeBrowse(IWebBrowser chromiumWebBrowser, IBrowser browser, IFrame frame, IRequest request, Boolean userGesture, Boolean isRedirect) => true;
-
-        public Boolean CanGetCookies(IWebBrowser chromiumWebBrowser, IBrowser browser, IFrame frame, IRequest request) => true;
-
-        public Boolean CanSetCookie(IWebBrowser chromiumWebBrowser, IBrowser browser, IFrame frame, IRequest request, Cookie cookie) => true;
+        public override void OnResourceLoadComplete(IWebBrowser browserControl, IBrowser browser, IFrame frame, IRequest request, IResponse response, UrlRequestStatus status, Int64 receivedContentLength)
+        {
+        }
     }
 }
