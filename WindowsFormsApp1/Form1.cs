@@ -72,8 +72,10 @@ namespace WindowsFormsApp1
 
         private void Form1_Load(Object sender, EventArgs e)
         {
+#if DEBUG
             var result = File.ReadAllText("result.json");
             DecodeResult(result);
+#endif
         }
 
         private void Browser_FrameLoadStart(Object sender, FrameLoadStartEventArgs e)
