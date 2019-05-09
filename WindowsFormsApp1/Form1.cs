@@ -44,6 +44,8 @@ namespace WindowsFormsApp1
             bw.StatusMessage += Bw_StatusMessage;
             bw.TitleChanged += Bw_TitleChanged;
 
+            Application.ApplicationExit += (s, e) => Cef.Shutdown();
+
             Browser = bw;
         }
 

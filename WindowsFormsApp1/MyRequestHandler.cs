@@ -104,10 +104,13 @@ namespace WindowsFormsApp1
             return null;
         }
 
-        private readonly Random _rand = new Random();
-
         public override void OnResourceLoadComplete(IWebBrowser browserControl, IBrowser browser, IFrame frame, IRequest request, IResponse response, UrlRequestStatus status, Int64 receivedContentLength)
         {
+            if (status == UrlRequestStatus.Success && request.ResourceType == ResourceType.Xhr && receivedContentLength > 0)
+            {
+                XTrace.WriteLine("LoadComplete [{0}] {1}", receivedContentLength, request.Url);
+                //var html = response.
+            }
         }
     }
 }
