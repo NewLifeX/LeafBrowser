@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
-using System.Text;
 using System.Windows.Forms;
 using CefSharp;
 using CefSharp.WinForms;
@@ -76,6 +74,9 @@ namespace LeafBrower
             var result = File.ReadAllText("result.json");
             DecodeResult(result);
 #endif
+
+            var set = Setting.Current;
+            txtUrl.Text = set.Url;
         }
 
         private void Browser_FrameLoadStart(Object sender, FrameLoadStartEventArgs e)
@@ -85,7 +86,14 @@ namespace LeafBrower
 
         private void BtnGo_Click(Object sender, EventArgs e)
         {
-            Browser.Load(txtUrl.Text);
+            var url = txtUrl.Text;
+            if (url.IsNullOrEmpty()) return;
+
+            var set = Setting.Current;
+            set.Url = url;
+            set.SaveAsync();
+
+            Browser.Load(url);
         }
 
         private void Web_FrameLoadEnd(Object sender, FrameLoadEndEventArgs e)
