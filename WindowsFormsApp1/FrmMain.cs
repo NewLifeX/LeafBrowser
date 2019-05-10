@@ -14,7 +14,7 @@ using NewLife.Threading;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace WindowsFormsApp1
+namespace LeafBrower
 {
     [ComVisible(true)]
     public partial class FrmMain : Form

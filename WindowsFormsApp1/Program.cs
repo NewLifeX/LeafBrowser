@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using NewLife.Log;
 
-namespace WindowsFormsApp1
+namespace LeafBrower
 {
     static class Program
     {

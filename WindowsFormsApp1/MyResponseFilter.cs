@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using CefSharp;
 
-namespace WindowsFormsApp1
+namespace LeafBrower
 {
     internal class MyResponseFilter : IResponseFilter
     {

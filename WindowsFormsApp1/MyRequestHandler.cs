@@ -4,7 +4,7 @@ using CefSharp.Handler;
 using NewLife.Collections;
 using NewLife.Log;
 
-namespace WindowsFormsApp1
+namespace LeafBrower
 {
     internal class MyRequestHandler : DefaultRequestHandler
     {
