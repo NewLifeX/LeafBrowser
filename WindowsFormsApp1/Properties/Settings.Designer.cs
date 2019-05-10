@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace WindowsFormsApp1.Properties {
+namespace LeafBrower.Properties {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
