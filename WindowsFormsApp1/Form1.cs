@@ -88,7 +88,7 @@ namespace WindowsFormsApp1
             Browser.Load(txtUrl.Text);
         }
 
-        private async void Web_FrameLoadEnd(Object sender, FrameLoadEndEventArgs e)
+        private void Web_FrameLoadEnd(Object sender, FrameLoadEndEventArgs e)
         {
             XTrace.WriteLine("FrameLoadEnd {0}", e.Url);
 
