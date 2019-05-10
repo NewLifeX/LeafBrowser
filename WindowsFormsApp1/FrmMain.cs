@@ -67,7 +67,7 @@ namespace WindowsFormsApp1
 
         private void Bw_StatusMessage(Object sender, StatusMessageEventArgs e)
         {
-            this.Invoke(() => lbStatus.Text = e.Value);
+            if (!e.Value.IsNullOrEmpty()) this.Invoke(() => lbStatus.Text = e.Value);
         }
 
         private void Form1_Load(Object sender, EventArgs e)
