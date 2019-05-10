@@ -39,6 +39,9 @@
             // 
             // panel1
             // 
+            this.panel1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.panel1.Location = new System.Drawing.Point(12, 71);
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(1877, 1084);
@@ -50,7 +53,6 @@
             this.txtUrl.Name = "txtUrl";
             this.txtUrl.Size = new System.Drawing.Size(1136, 50);
             this.txtUrl.TabIndex = 1;
-            this.txtUrl.Text = "http://www.chinacar.com.cn/search.html";
             // 
             // btnGo
             // 

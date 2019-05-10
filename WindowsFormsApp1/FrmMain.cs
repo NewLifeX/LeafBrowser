@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
@@ -157,9 +158,6 @@ namespace LeafBrower
         private static Int32 _gid;
         private void WriteData(IList<JToken> list)
         {
-            //var sb = Pool.StringBuilder.Get();
-            //var lines = new List<String>();
-
             // 头部
             var headers = new List<String>();
             foreach (var item in list)
@@ -174,31 +172,23 @@ namespace LeafBrower
             }
 
             var fname = $"{DateTime.Now:yyyyMMddHHmmss}_{++_gid}.csv";
+            fname = Setting.Current.DataPath.CombinePath(fname).GetFullPath().EnsureDirectory(true);
             using (var csv = new CsvFile(fname, true))
             {
                 //csv.Encoding = new UTF8Encoding(true);
 
                 // 第一行写头部
-                //if (lines.Count == 0) lines.Add(headers.Join(","));
                 csv.WriteLine(headers);
 
                 // 单行和多行
                 foreach (var item in list)
                 {
                     if (item is IDictionary<String, JToken> dic)
-                    {
                         csv.WriteLine(headers.Select(e => dic[e]));
-                    }
                     else
-                    {
-                        //lines.Add(item + "");
                         csv.WriteLine(new[] { item });
-                    }
                 }
             }
-
-            //var fname = $"{DateTime.Now:yyyyMMddHHmmss}_{++_gid}.csv";
-            //File.WriteAllLines(fname, lines, new UTF8Encoding(true));
         }
     }
 }
