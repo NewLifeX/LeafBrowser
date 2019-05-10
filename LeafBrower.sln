@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.28803.352
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WindowsFormsApp1", "WindowsFormsApp1\WindowsFormsApp1.csproj", "{DCA5696C-5C5B-4741-8F65-098BF7C899AC}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LeafBrower", "WindowsFormsApp1\LeafBrower.csproj", "{DCA5696C-5C5B-4741-8F65-098BF7C899AC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

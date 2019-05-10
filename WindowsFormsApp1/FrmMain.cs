@@ -17,11 +17,11 @@ using Newtonsoft.Json.Linq;
 namespace WindowsFormsApp1
 {
     [ComVisible(true)]
-    public partial class Form1 : Form
+    public partial class FrmMain : Form
     {
         private ChromiumWebBrowser Browser { get; set; }
 
-        public Form1()
+        public FrmMain()
         {
             InitializeComponent();
 
