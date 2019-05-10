@@ -12,9 +12,13 @@ namespace LeafBrower
 
         private readonly DictionaryCache<UInt64, IResponseFilter> _filters = new DictionaryCache<UInt64, IResponseFilter> { Expire = 60, Period = 60 };
 
+        private String[] _blocks = new[] {
+            "pos.baidu.com", "crs.baidu.com", "hm.baidu.com", "em.baidu.com", "eclick.baidu.com", "baidustatic.com",
+            "googlesyndication.com","googletagservices.com",
+            "b.qq.com" };
+
         public override CefReturnValue OnBeforeResourceLoad(IWebBrowser browserControl, IBrowser browser, IFrame frame, IRequest request, IRequestCallback callback)
         {
-
             if (!Uri.TryCreate(request.Url, UriKind.Absolute, out var uri))
             {
                 //If we're unable to parse the Uri then cancel the request
@@ -23,7 +27,7 @@ namespace LeafBrower
             }
 
             // 过滤广告
-            if (uri.Host.EndsWithIgnoreCase("pos.baidu.com", "crs.baidu.com", "hm.baidu.com", "em.baidu.com", "eclick.baidu.com", "baidustatic.com", "b.qq.com")) return CefReturnValue.Cancel;
+            if (uri.Host.EndsWithIgnoreCase(_blocks)) return CefReturnValue.Cancel;
             if (uri.PathAndQuery.StartsWithIgnoreCase("/Ad/")) return CefReturnValue.Cancel;
 
             //System.Diagnostics.Debug.WriteLine(request.ResourceType.ToString());

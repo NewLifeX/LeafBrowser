@@ -101,6 +101,9 @@ namespace LeafBrower
         {
             XTrace.WriteLine("FrameLoadEnd {0}", e.Url);
 
+            // 如果是主框架，则改变地址栏
+            if (e.Frame != null && e.Frame.IsMain) txtUrl.Text = e.Url;
+
             //var url = e.Url;
             //var result = await Browser.GetSourceAsync();
             //var html = result;
@@ -114,10 +117,14 @@ namespace LeafBrower
 
         private void DecodeResult(String result)
         {
-            var js = JsonConvert.DeserializeObject(result);
+            try
+            {
+                var js = JsonConvert.DeserializeObject(result);
 
-            //var js = new JsonParser(result).Decode();
-            Decode(js);
+                //var js = new JsonParser(result).Decode();
+                Decode(js);
+            }
+            catch (JsonReaderException) { }
         }
 
         private void Decode(Object js)
