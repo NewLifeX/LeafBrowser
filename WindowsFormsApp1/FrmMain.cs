@@ -6,6 +6,7 @@ using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using CefSharp;
 using CefSharp.WinForms;
+using NewLife;
 using NewLife.Collections;
 using NewLife.IO;
 using NewLife.Log;
@@ -72,8 +73,8 @@ namespace LeafBrower
         private void Form1_Load(Object sender, EventArgs e)
         {
 #if DEBUG
-            var result = File.ReadAllText("result.json");
-            DecodeResult(result);
+            //var result = File.ReadAllText("result.json");
+            //DecodeResult(result);
 #endif
 
             var set = Setting.Current;
@@ -102,7 +103,7 @@ namespace LeafBrower
             XTrace.WriteLine("FrameLoadEnd {0}", e.Url);
 
             // 如果是主框架，则改变地址栏
-            if (e.Frame != null && e.Frame.IsMain) txtUrl.Text = e.Url;
+            if (e.Frame != null && e.Frame.IsMain) this.Invoke(() => txtUrl.Text = e.Url);
 
             //var url = e.Url;
             //var result = await Browser.GetSourceAsync();
