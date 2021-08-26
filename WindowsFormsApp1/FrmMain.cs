@@ -112,44 +112,42 @@ namespace LeafBrower
 
         private void OnComplete(IRequest request, IResponse response, String result)
         {
+            var url = request.Url;
+
             // 解码Json
-            ThreadPoolX.QueueUserWorkItem(DecodeResult, result);
+            ThreadPoolX.QueueUserWorkItem(() => DecodeResult(url, result));
         }
 
-        private void DecodeResult(String result)
+        private void DecodeResult(String url, String result)
         {
             try
             {
+                var p = url.IndexOf('?');
+                if (p > 0) url = url.Substring(0, p);
+
+                p = url.LastIndexOf('/');
+                if (p > 0) url = url.Substring(p + 1);
+
+                var name = url.Replace('/', '_');
+                var fname = $"{name}_{++_gid}.json";
+                fname = Setting.Current.DataPath.CombinePath(fname).GetFullPath().EnsureDirectory(true);
+                File.WriteAllText(fname, result);
+
                 var js = JsonConvert.DeserializeObject(result);
 
                 //var js = new JsonParser(result).Decode();
-                Decode(js);
+                Decode(name, js);
             }
             catch (JsonReaderException) { }
         }
 
-        private void Decode(Object js)
+        private void Decode(String name, Object js)
         {
-            //if (js is IList<Object> list)
-            //{
-            //    if (list.Count > 0) WriteData(list);
-
-            //    return;
-            //}
-
-            //if (js is IDictionary<String, Object> dic)
-            //{
-            //    foreach (var item in dic)
-            //    {
-            //        Decode(item.Value);
-            //    }
-            //}
-
             if (js is IDictionary<String, JToken> jts && jts.Count > 0)
             {
                 foreach (var item in jts)
                 {
-                    Decode(item.Value);
+                    Decode(name, item.Value);
                 }
 
                 return;
@@ -157,14 +155,14 @@ namespace LeafBrower
 
             if (js is IList<JToken> tokens)
             {
-                if (tokens.Count > 0) WriteData(tokens);
+                if (tokens.Count > 0) WriteData(name, tokens);
 
                 return;
             }
         }
 
         private static Int32 _gid;
-        private void WriteData(IList<JToken> list)
+        private void WriteData(String name, IList<JToken> list)
         {
             // 头部
             var headers = new List<String>();
@@ -179,7 +177,8 @@ namespace LeafBrower
                 }
             }
 
-            var fname = $"{DateTime.Now:yyyyMMddHHmmss}_{++_gid}.csv";
+            //var fname = $"{DateTime.Now:yyyyMMddHHmmss}_{++_gid}.csv";
+            var fname = $"{name}_{++_gid}.csv";
             fname = Setting.Current.DataPath.CombinePath(fname).GetFullPath().EnsureDirectory(true);
             using (var csv = new CsvFile(fname, true))
             {
