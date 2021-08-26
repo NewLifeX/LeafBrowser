@@ -31,9 +31,11 @@ using System.Runtime.InteropServices;
 //
 //可以指定所有这些值，也可以使用“生成号”和“修订号”的默认值
 //通过使用 "*"，如下所示:
-[assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyFileVersion("1.0.2019.0510")]
+[assembly: AssemblyVersion("1.1.*")]
+[assembly: AssemblyFileVersion("1.1.2021.0826")]
 
 /*
+ * v1.1.2021.0826   优化保存文件名，增加保存json文件
+ * 
  * v1.0.2019.0510   开发叶子浏览器，抓取结构化数据
  */
