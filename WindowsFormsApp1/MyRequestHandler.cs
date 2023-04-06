@@ -1,5 +1,6 @@
 ﻿using CefSharp;
 using NewLife;
+using NewLife.Caching;
 using NewLife.Collections;
 using NewLife.Log;
 using System;
@@ -11,14 +12,14 @@ namespace LeafBrower
     {
         public Action<IRequest, IResponse, String> OnComplete;
 
-        private readonly DictionaryCache<UInt64, IResponseFilter> _filters = new DictionaryCache<UInt64, IResponseFilter> { Expire = 60, Period = 60 };
+        private readonly ICache _filters = new MemoryCache { Expire = 60, Period = 60 };
 
         public virtual IResponseFilter GetResourceResponseFilter(IWebBrowser browserControl, IBrowser browser, IFrame frame, IRequest request, IResponse response)
         {
             if (request.ResourceType == ResourceType.Xhr)
             {
                 var filter = new MyResponseFilter();
-                _filters.Set(request.Identifier, filter);
+                _filters.Set(request.Identifier + "", filter);
                 return filter;
             }
 
@@ -35,7 +36,7 @@ namespace LeafBrower
                 //{
                 //    var html = t.Result;
                 //});
-                var filter = _filters[request.Identifier];
+                var filter = _filters.Get<IResponseFilter>(request.Identifier + "");
                 if (filter is MyResponseFilter rf)
                 {
                     var ms = rf.Stream;
